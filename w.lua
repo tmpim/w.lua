@@ -63,6 +63,7 @@ function open(callback, url, headers)
     wsRegistry[id] = ws
   end
   callbackRegistry[id] = callback
+  return id
 end
 
 function init(jua)
