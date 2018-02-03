@@ -1,11 +1,20 @@
 local jua = nil
 local idPatt = "#R%d+"
 
-if not http.websocketAsync then
-  error("You do not have CC:Tweaked installed or you are not on the latest version.")
+if not ((socket and socket.websocket) or http.websocketAsync) then
+  error("You do not have CC:Tweaked/CCTweaks installed or you are not on the latest version.")
+end
+
+local newws = socket and socket.websocket or http.websocketAsync
+local async
+if socket and socket.websocket then
+  async = false
+else
+  async = true
 end
 
 callbackRegistry = {}
+wsRegistry = {}
 
 local function gfind(str, patt)
   local t = {}
@@ -36,43 +45,86 @@ local function trimID(url)
 end
 
 function open(callback, url, headers)
-  local id = newID()
-  local newUrl = url .. "#R" .. id
-  http.websocketAsync(newUrl, headers)
+  local id
+  if async then
+    id = newID()
+  end
+  local newUrl
+  if async then
+    newUrl = url .. "#R" .. id
+    newws(newUrl, headers)
+  else
+    if headers then
+      error("Websocket headers not supported under CCTweaks")
+    end
+    local ws = newws(url)
+    ws.send = ws.write
+    id = ws.id()
+    wsRegistry[id] = ws
+  end
   callbackRegistry[id] = callback
 end
 
 function init(jua)
   jua = jua
-  jua.on("websocket_success", function(event, url, handle)
-    local id = findID(url)
-    if callbackRegistry[id].success then
-      callbackRegistry[id].success(trimID(url), handle)
-    end
-  end)
+  if async then
+    jua.on("websocket_success", function(event, url, handle)
+      local id = findID(url)
+      if callbackRegistry[id].success then
+        callbackRegistry[id].success(trimID(url), handle)
+      end
+    end)
 
-  jua.on("websocket_failure", function(event, url)
-    local id = findID(url)
-    if callbackRegistry[id].failure then
-      callbackRegistry[id].failure(trimID(url))
-    end
-    table.remove(callbackRegistry, id)
-  end)
+    jua.on("websocket_failure", function(event, url)
+      local id = findID(url)
+      if callbackRegistry[id].failure then
+        callbackRegistry[id].failure(trimID(url))
+      end
+      table.remove(callbackRegistry, id)
+    end)
 
-  jua.on("websocket_message", function(event, url, data)
-    local id = findID(url)
-    if callbackRegistry[id].message then
-      callbackRegistry[id].message(trimID(url), data)
-    end
-  end)
+    jua.on("websocket_message", function(event, url, data)
+      local id = findID(url)
+      if callbackRegistry[id].message then
+        callbackRegistry[id].message(trimID(url), data)
+      end
+    end)
 
-  jua.on("websocket_closed", function(event, url)
-    local id = findID(url)
-    if callbackRegistry[id].closed then
-      callbackRegistry[id].closed(trimID(url))
-    end
-    table.remove(callbackRegistry, id)
-  end)
+    jua.on("websocket_closed", function(event, url)
+      local id = findID(url)
+      if callbackRegistry[id].closed then
+        callbackRegistry[id].closed(trimID(url))
+      end
+      table.remove(callbackRegistry, id)
+    end)
+  else
+    jua.on("socket_connect", function(event, id)
+      if callbackRegistry[id].success then
+        callbackRegistry[id].success(id, wsRegistry[id])
+      end
+    end)
+
+    jua.on("socket_error", function(event, id, msg)
+      if callbackRegistry[id].failure then
+        callbackRegistry[id].failure(id, msg)
+      end
+      table.remove(callbackRegistry, id)
+    end)
+
+    jua.on("socket_message", function(event, id)
+      if callbackRegistry[id].message then
+        local data = wsRegistry[id].read()
+        callbackRegistry[id].message(id, data)
+      end
+    end)
+
+    jua.on("socket_closed", function(event, id)
+      if callbackRegistry[id].closed then
+        callbackRegistry[id].closed(id)
+      end
+      table.remove(callbackRegistry, id)
+    end)
+  end
 end
 
 return {

@@ -6,7 +6,9 @@ if require then
   w = require("w")
 else
   os.loadAPI("jua")
+  jua = _G.jua
   os.loadAPI("w")
+  w = _G.w
 end
 
 w.init(jua)
