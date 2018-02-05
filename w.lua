@@ -72,14 +72,14 @@ function init(jua)
     jua.on("websocket_success", function(event, url, handle)
       local id = findID(url)
       if callbackRegistry[id].success then
-        callbackRegistry[id].success(trimID(url), handle)
+        callbackRegistry[id].success(id, handle)
       end
     end)
 
     jua.on("websocket_failure", function(event, url)
       local id = findID(url)
       if callbackRegistry[id].failure then
-        callbackRegistry[id].failure(trimID(url))
+        callbackRegistry[id].failure(id)
       end
       table.remove(callbackRegistry, id)
     end)
@@ -87,14 +87,14 @@ function init(jua)
     jua.on("websocket_message", function(event, url, data)
       local id = findID(url)
       if callbackRegistry[id].message then
-        callbackRegistry[id].message(trimID(url), data)
+        callbackRegistry[id].message(id, data)
       end
     end)
 
     jua.on("websocket_closed", function(event, url)
       local id = findID(url)
       if callbackRegistry[id].closed then
-        callbackRegistry[id].closed(trimID(url))
+        callbackRegistry[id].closed(id)
       end
       table.remove(callbackRegistry, id)
     end)
