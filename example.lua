@@ -1,15 +1,5 @@
-local jua
-local w
-
-if require then
-  jua = require("jua")
-  w = require("w")
-else
-  os.loadAPI("jua")
-  jua = _G.jua
-  os.loadAPI("w")
-  w = _G.w
-end
+local jua = require("jua")
+local w = require("w")
 
 w.init(jua)
 
