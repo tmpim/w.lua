@@ -96,8 +96,8 @@ function init(jua)
       local id = findID(url)
       if id and callbackRegistry[id].closed then
         callbackRegistry[id].closed(id)
+        table.remove(callbackRegistry, id)
       end
-      table.remove(callbackRegistry, id)
     end)
   else
     jua.on("socket_connect", function(event, id)
@@ -123,8 +123,8 @@ function init(jua)
     jua.on("socket_closed", function(event, id)
       if id and callbackRegistry[id].closed then
         callbackRegistry[id].closed(id)
+        table.remove(callbackRegistry, id)
       end
-      table.remove(callbackRegistry, id)
     end)
   end
 end
