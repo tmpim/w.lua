@@ -94,8 +94,10 @@ function init(jua)
 
     jua.on("websocket_closed", function(event, url)
       local id = findID(url)
-      if id and callbackRegistry[id].closed then
-        callbackRegistry[id].closed(id)
+      if id then
+        if callbackRegistry[id].closed then
+          callbackRegistry[id].closed(id)
+        end
         table.remove(callbackRegistry, id)
       end
     end)
@@ -121,8 +123,10 @@ function init(jua)
     end)
 
     jua.on("socket_closed", function(event, id)
-      if id and callbackRegistry[id].closed then
-        callbackRegistry[id].closed(id)
+      if id then
+        if callbackRegistry[id].closed then
+          callbackRegistry[id].closed(id)
+        end
         table.remove(callbackRegistry, id)
       end
     end)
