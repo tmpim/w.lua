@@ -79,10 +79,12 @@ function init(jua)
 
     jua.on("websocket_failure", function(event, url)
       local id = findID(url)
-      if id and callbackRegistry[id].failure then
-        callbackRegistry[id].failure(id)
+      if id then
+        if callbackRegistry[id].failure then
+          callbackRegistry[id].failure(id)
+        end
+        table.remove(callbackRegistry, id)
       end
-      table.remove(callbackRegistry, id)
     end)
 
     jua.on("websocket_message", function(event, url, data)
@@ -109,10 +111,12 @@ function init(jua)
     end)
 
     jua.on("socket_error", function(event, id, msg)
-      if id and callbackRegistry[id].failure then
-        callbackRegistry[id].failure(id, msg)
+      if id then
+        if callbackRegistry[id].failure then
+          callbackRegistry[id].failure(id, msg)
+        end
+        table.remove(callbackRegistry, id)
       end
-      table.remove(callbackRegistry, id)
     end)
 
     jua.on("socket_message", function(event, id)
