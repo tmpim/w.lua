@@ -1,7 +1,8 @@
-local jua
-local w
+local jua = require("jua")
+local w = require("w")
 
-if require then
+-- if its made for cc tweaked then require should always be there
+--[[ if require then
   jua = require("jua")
   w = require("w")
 else
@@ -9,7 +10,7 @@ else
   jua = _G.jua
   os.loadAPI("w")
   w = _G.w
-end
+end -]]
 
 w.init(jua)
 
